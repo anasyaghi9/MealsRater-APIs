@@ -7,10 +7,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.authtoken.models import Token
+
 
 class MealViewSet(viewsets.ModelViewSet):
     queryset = Meal.objects.all()
     serializer_class = MealSerializer
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     @action(detail=True, methods=['post'])
     def rate_meal(self, request, pk=None):
@@ -20,28 +27,15 @@ class MealViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if 'username' not in request.data:
-            return Response(
-                {'message': 'username not provided'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         stars = request.data['stars']
-        username = request.data['username']
+        user = request.user
+
 
         try:
             meal = Meal.objects.get(id=pk)
         except Meal.DoesNotExist:
             return Response(
                 {'message': 'Meal not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return Response(
-                {'message': 'User not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -84,3 +78,23 @@ class MealViewSet(viewsets.ModelViewSet):
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def update(self, request, *args, **kwargs):
+        return Response(
+            {'message': 'Not Allowed To Update!'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response(
+            {'message': 'Not Allowed To Update!'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {'message': 'Not Allowed To Create!'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
