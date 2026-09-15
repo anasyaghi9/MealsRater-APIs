@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from .serializers import RatingSerializer, MealSerializer
+from .serializers import RatingSerializer, MealSerializer, UserSerializer
 from .models import Meal, Rating
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -10,6 +10,27 @@ from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authtoken.models import Token
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    # #authentication_classes = (TokenAuthentication, )
+    permission_classes = (AllowAny,)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        token, created = Token.objects.get_or_create(user=serializer.instance)
+        return Response({
+                'token': token.key, 
+                }, 
+            status=status.HTTP_201_CREATED)
+    
+    def list(self, request, *args, **kwargs):
+        response = {'message': 'You cant create rating like that'}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MealViewSet(viewsets.ModelViewSet):
@@ -98,3 +119,5 @@ class RatingViewSet(viewsets.ModelViewSet):
             {'message': 'Not Allowed To Create!'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
+
+    
